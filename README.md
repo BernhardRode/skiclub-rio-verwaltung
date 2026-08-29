@@ -116,8 +116,10 @@ Zwei GitHub-Actions-Workflows:
   anschließend das Deployment auf GitHub Pages. Der Basispfad wird aus dem Repository-Namen
   gesetzt (`VITE_BASE_PATH`).
 
-**Einmalige Einrichtung:** unter *Settings → Pages* als Quelle **GitHub Actions**
-auswählen. Danach veröffentlicht jeder Push auf `main` automatisch.
+Der Workflow aktiviert GitHub Pages beim ersten Lauf selbst
+(`configure-pages` mit `enablement: true`), eine Einrichtung von Hand ist nicht nötig.
+Sollte das an den Berechtigungen der Organisation scheitern, unter *Settings → Pages*
+als Quelle **GitHub Actions** auswählen und den Workflow erneut starten.
 
 Für eine eigene Domain (z. B. `ausfahrt.skiclub-rio.de`) zusätzlich eine Datei `public/CNAME`
 mit dem Hostnamen anlegen und einen CNAME-Eintrag im DNS auf `bernhardrode.github.io`
