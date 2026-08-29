@@ -30,7 +30,13 @@ const leeresZimmer = (): ZimmerEntwurf => ({
 
 export function Zimmer() {
   const daten = useDaten()
-  const { zimmerAnlegen, zimmerAendern, zimmerLoeschen, zimmerZuordnen } = useAusfahrt()
+  const {
+    zimmerAnlegen,
+    zimmerAendern,
+    zimmerLoeschen,
+    zimmerZuordnen,
+    zimmerplanWiederherstellen,
+  } = useAusfahrt()
   const [dialogOffen, setDialogOffen] = useState(false)
   const [bearbeiteId, setBearbeiteId] = useState<string | undefined>()
   const [entwurf, setEntwurf] = useState<ZimmerEntwurf>(leeresZimmer())
@@ -97,6 +103,7 @@ export function Zimmer() {
         )} ohne Zimmer.`}
         aktion={
           <>
+            <Knopf onClick={zimmerplanWiederherstellen}>Fehlende Zimmer ergänzen</Knopf>
             <Knopf onClick={csvExport} disabled={daten.zimmer.length === 0}>
               Zimmerplan als CSV
             </Knopf>
@@ -149,11 +156,14 @@ export function Zimmer() {
       {daten.zimmer.length === 0 ? (
         <Karte>
           <LeerZustand
-            text="Noch keine Zimmer angelegt. Lege die Zimmer der Unterkunft an, um die Belegung zu planen."
+            text="Keine Zimmer angelegt. Der hinterlegte Zimmerplan der Unterkunft lässt sich jederzeit wiederherstellen."
             aktion={
-              <Knopf variante="primaer" onClick={() => oeffnen()}>
-                Erstes Zimmer anlegen
-              </Knopf>
+              <>
+                <Knopf variante="primaer" onClick={zimmerplanWiederherstellen}>
+                  Zimmerplan der Unterkunft laden
+                </Knopf>
+                <Knopf onClick={() => oeffnen()}>Einzelnes Zimmer anlegen</Knopf>
+              </>
             }
           />
         </Karte>

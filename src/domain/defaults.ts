@@ -1,7 +1,60 @@
 import { neueId } from '../lib/id'
-import type { AusfahrtDaten } from './types'
+import type { AusfahrtDaten, Zimmer } from './types'
 
-export const DATEN_VERSION = 1
+export const DATEN_VERSION = 2
+
+/**
+ * Zimmer der Unterkunft. Sie bleiben von Jahr zu Jahr gleich und sind deshalb
+ * fest hinterlegt – Bettenzahlen lassen sich in der Zimmerverwaltung anpassen.
+ *
+ * Die Bettenzahlen stammen aus der Belegung der letzten Ausfahrt (56 Plätze in
+ * 24 Zimmern) und sind damit die tatsächlich genutzte, nicht zwingend die
+ * maximale Kapazität.
+ */
+const ZIMMERPLAN: [bezeichnung: string, betten: number, bereich: string][] = [
+  ['01', 2, 'Erdgeschoss'],
+  ['02', 2, 'Erdgeschoss'],
+  ['03', 2, 'Erdgeschoss'],
+  ['04', 1, 'Erdgeschoss'],
+  ['05', 2, 'Erdgeschoss'],
+  ['101', 3, '1. Obergeschoss'],
+  ['102', 3, '1. Obergeschoss'],
+  ['103', 2, '1. Obergeschoss'],
+  ['104', 2, '1. Obergeschoss'],
+  ['105', 2, '1. Obergeschoss'],
+  ['106', 5, '1. Obergeschoss'],
+  ['107', 1, '1. Obergeschoss'],
+  ['108', 5, '1. Obergeschoss'],
+  ['201', 3, '2. Obergeschoss'],
+  ['202', 3, '2. Obergeschoss'],
+  ['203', 2, '2. Obergeschoss'],
+  ['204', 1, '2. Obergeschoss'],
+  ['205', 2, '2. Obergeschoss'],
+  ['206', 3, '2. Obergeschoss'],
+  ['DL1', 2, 'DL'],
+  ['DL2', 3, 'DL'],
+  ['DL3', 2, 'DL'],
+  ['DL4', 2, 'DL'],
+  ['MAZ', 1, 'MAZ'],
+]
+
+function kategorie(betten: number): string {
+  if (betten === 1) return 'Einzelzimmer'
+  if (betten === 2) return 'Doppelzimmer'
+  return `${betten}-Bett-Zimmer`
+}
+
+/** Legt den Zimmerplan der Unterkunft mit frischen IDs an. */
+export function erstelleZimmerplan(): Zimmer[] {
+  return ZIMMERPLAN.map(([bezeichnung, betten, bereich]) => ({
+    id: neueId(),
+    bezeichnung,
+    haus: bereich,
+    kategorie: kategorie(betten),
+    betten,
+    zuschlagProPerson: 0,
+  }))
+}
 
 /**
  * Startdatensatz mit realistischen Platzhaltern. Alle Werte lassen sich in der
@@ -36,7 +89,7 @@ export function erstelleStartdaten(): AusfahrtDaten {
       skipassEinkaufAutomatisch: true,
     },
     teilnehmer: [],
-    zimmer: [],
+    zimmer: erstelleZimmerplan(),
     skipassTypen: [
       {
         id: skipassErwachsen,

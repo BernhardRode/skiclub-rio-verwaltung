@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { DATEN_VERSION, erstelleStartdaten } from '../domain/defaults'
+import {
+  DATEN_VERSION,
+  erstelleStartdaten,
+  erstelleZimmerplan,
+} from '../domain/defaults'
 import type {
   Ausfahrt,
   AusfahrtDaten,
@@ -46,6 +50,7 @@ interface AusfahrtStore {
   zahlungEntfernen: (teilnehmerId: string, zahlungId: string) => void
 
   zimmerAnlegen: (zimmer: Omit<Zimmer, 'id'>) => string
+  zimmerplanWiederherstellen: () => void
   zimmerAendern: (id: string, aenderung: Partial<Zimmer>) => void
   zimmerLoeschen: (id: string) => void
 
@@ -261,6 +266,19 @@ export const useAusfahrt = create<AusfahrtStore>()(
         return id
       },
 
+      zimmerplanWiederherstellen: () =>
+        set((state) => {
+          const vorhanden = new Set(
+            state.daten.zimmer.map((z) => z.bezeichnung.toLowerCase()),
+          )
+          const fehlende = erstelleZimmerplan().filter(
+            (z) => !vorhanden.has(z.bezeichnung.toLowerCase()),
+          )
+          return {
+            daten: { ...state.daten, zimmer: [...state.daten.zimmer, ...fehlende] },
+          }
+        }),
+
       zimmerAendern: (id, aenderung) =>
         set((state) => ({
           daten: {
@@ -343,6 +361,17 @@ export const useAusfahrt = create<AusfahrtStore>()(
       name: SPEICHER_SCHLUESSEL,
       version: DATEN_VERSION,
       partialize: (state) => ({ daten: state.daten }),
+      // Version 2 liefert den festen Zimmerplan der Unterkunft mit. Stände, in
+      // denen noch keine Zimmer angelegt wurden, bekommen ihn nachgereicht;
+      // eigene Zimmer bleiben unangetastet.
+      migrate: (persistiert, version) => {
+        const stand = persistiert as { daten?: AusfahrtDaten } | undefined
+        if (!stand?.daten) return stand
+        if (version < 2 && stand.daten.zimmer?.length === 0) {
+          return { ...stand, daten: { ...stand.daten, zimmer: erstelleZimmerplan() } }
+        }
+        return stand
+      },
       // Nachträglich ergänzte Felder auffüllen, damit ältere Stände laden.
       merge: (persistiert, aktuell) => {
         const gespeichert = (persistiert as { daten?: Partial<AusfahrtDaten> } | undefined)

@@ -13,7 +13,7 @@ bringen.
 | --- | --- |
 | **Übersicht** | Kennzahlen zu Anmeldungen, Bettenbelegung, Saldo und offenen Beiträgen, Verpflegungswünsche für die Unterkunft und eine Checkliste der nächsten Schritte. |
 | **Anmeldungen** | Teilnehmerverwaltung mit Altersgruppe, Mitgliedschaft, Status (angemeldet / bestätigt / Warteliste / storniert), Verpflegungswunsch, kostenloser Teilnahme, Zimmer- und Skipass-Zuordnung, individuellen Zusatzposten, Rabatten und Zahlungseingängen. Suche, Filter, CSV-Export und **CSV-Import bestehender Listen**. |
-| **Zimmer** | Zimmer der Unterkunft mit Bettenzahl und Zuschlag pro Person. Belegung per Auswahl, Warnung bei Überbelegung, Liste der noch nicht zugeordneten Personen, Zimmerplan als CSV. |
+| **Zimmer** | Der Zimmerplan der Unterkunft ist fest hinterlegt (24 Zimmer, 56 Betten) und beim ersten Start sofort da. Belegung per Auswahl, Warnung bei Überbelegung, Liste der noch nicht zugeordneten Personen, Zuschlag pro Zimmer, Zimmerplan als CSV. |
 | **Skipässe** | Passtypen mit Gültigkeitsdauer, Einkaufs- und Verkaufspreis sowie zulässigen Altersgruppen. Bedarfsübersicht je Typ inklusive Bestellliste als CSV. |
 | **Preise** | Grundpreise je Altersgruppe – getrennt für Mitglieder und Gäste – plus Auswertung, wie sich die Anmeldungen auf die Gruppen verteilen. |
 | **Ausgaben** | Kostenposten pauschal, pro Person oder pro Person und Nacht, mit Kategorie, Fälligkeit und Bezahlt-Status. Die Hochrechnung auf die aktuelle Teilnehmerzahl passiert automatisch. |
@@ -41,6 +41,25 @@ Personenzahl. Personen auf der Warteliste zählen ebenfalls nicht mit.
 Auf der Ausgabenseite stehen die erfassten Kostenposten – hochgerechnet auf die Zahl der
 zahlenden Personen und die Nächte – sowie optional der automatisch verbuchte
 Skipass-Einkauf. 
+
+## Zimmerplan der Unterkunft
+
+Die Unterkunft bleibt von Jahr zu Jahr dieselbe, deshalb steht ihr Zimmerplan fest im
+Code (`ZIMMERPLAN` in `src/domain/defaults.ts`): 24 Zimmer mit zusammen 56 Betten,
+aufgeteilt auf Erdgeschoss (01–05), 1. Obergeschoss (101–108), 2. Obergeschoss
+(201–206), DL (DL1–DL4) und MAZ.
+
+Zwei Hinweise dazu:
+
+- Die **Bettenzahlen stammen aus der Belegung der letzten Ausfahrt**, sind also die
+  tatsächlich genutzte und nicht zwingend die maximale Kapazität. Sie lassen sich pro
+  Zimmer anpassen.
+- Die **Bereichsbezeichnungen** sind aus der Zimmernummerierung abgeleitet. Stimmen sie
+  nicht, im Zimmer bearbeiten oder in `ZIMMERPLAN` korrigieren.
+
+Gelöschte Zimmer holt *Fehlende Zimmer ergänzen* auf der Zimmerseite zurück; bestehende
+Zimmer bleiben dabei unangetastet. Ein Einzelzimmerzuschlag gehört an das jeweilige
+Zimmer (`Zuschlag pro Person`), nicht an die Person.
 
 ## Import bestehender Listen
 
