@@ -3,6 +3,7 @@ import {
   berechneKalkulation,
   berechneSkipassBedarf,
   berechneTeilnehmerpreis,
+  berechneVerpflegung,
   berechneZimmerbelegung,
   hochrechnenAusgabe,
   naechte,
@@ -48,6 +49,7 @@ function teilnehmer(ueberschreibung: Partial<Teilnehmer> = {}): Teilnehmer {
     nachname: 'Muster',
     altersgruppe: 'erwachsener',
     mitglied: true,
+    beitragsfrei: false,
     status: 'bestaetigt',
     zusatzposten: [],
     rabatt: 0,
@@ -158,6 +160,65 @@ describe('berechneTeilnehmerpreis', () => {
       daten(),
     )
     expect(preis.gesamt).toBe(400)
+  })
+})
+
+describe('beitragsfreie Teilnahme', () => {
+  it('setzt den Preis auf 0, zählt die Person aber weiter mit', () => {
+    const preis = berechneTeilnehmerpreis(
+      teilnehmer({ beitragsfrei: true, skipassTypId: 'pass-1' }),
+      daten(),
+    )
+    expect(preis.gesamt).toBe(0)
+  })
+
+  it('belastet die Kalkulation mit den Kosten des Freiplatzes', () => {
+    const k = berechneKalkulation(
+      daten({
+        teilnehmer: [
+          teilnehmer({ id: 'tn-1' }),
+          teilnehmer({ id: 'tn-2', beitragsfrei: true }),
+        ],
+        ausgaben: [
+          {
+            id: 'a-1',
+            bezeichnung: 'Halbpension',
+            kategorie: 'unterkunft',
+            art: 'proPerson',
+            betrag: 300,
+            bezahlt: false,
+          },
+        ],
+      }),
+    )
+    // Nur eine Person zahlt, die Unterkunft wird für beide fällig.
+    expect(k.personen).toBe(2)
+    expect(k.einnahmen).toBe(400)
+    expect(k.ausgaben).toBe(600)
+    expect(k.saldo).toBe(-200)
+  })
+})
+
+describe('berechneVerpflegung', () => {
+  it('zählt Wünsche und sortiert nach Häufigkeit', () => {
+    const uebersicht = berechneVerpflegung([
+      teilnehmer({ id: 'tn-1', verpflegung: 'Vegetarisch' }),
+      teilnehmer({ id: 'tn-2', verpflegung: 'Vegetarisch' }),
+      teilnehmer({ id: 'tn-3', verpflegung: 'Glutenfrei' }),
+      teilnehmer({ id: 'tn-4' }),
+      teilnehmer({ id: 'tn-5', verpflegung: '   ' }),
+    ])
+    expect(uebersicht).toEqual([
+      { bezeichnung: 'Vegetarisch', anzahl: 2 },
+      { bezeichnung: 'Glutenfrei', anzahl: 1 },
+    ])
+  })
+
+  it('ignoriert stornierte Anmeldungen', () => {
+    const uebersicht = berechneVerpflegung([
+      teilnehmer({ id: 'tn-1', verpflegung: 'Vegan', status: 'storniert' }),
+    ])
+    expect(uebersicht).toEqual([])
   })
 })
 

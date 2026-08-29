@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Teilnehmerdaten gehören nicht ins Repository
+*.xlsx
+*.xls
+*.csv
+galtuer-*.json

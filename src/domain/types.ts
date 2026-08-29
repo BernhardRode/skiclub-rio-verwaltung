@@ -44,6 +44,13 @@ export interface Teilnehmer {
   status: TeilnehmerStatus
   zimmerId?: string
   skipassTypId?: string
+  /** Verpflegungswunsch bzw. Unverträglichkeit, z. B. „Vegetarisch“. */
+  verpflegung?: string
+  /**
+   * Nimmt kostenlos teil (Busfahrer, Helfer). Zählt bei den Kosten und im
+   * Zimmerplan mit, zahlt aber keinen Beitrag.
+   */
+  beitragsfrei: boolean
   /** Individuelle Zusatzkosten, z. B. Leihski oder Einzeltransfer. */
   zusatzposten: Zusatzposten[]
   rabatt: number
@@ -160,6 +167,14 @@ export const AUSGABEN_KATEGORIE_LABEL: Record<AusgabenKategorie, string> = {
   programm: 'Programm',
   sonstiges: 'Sonstiges',
 }
+
+/** Gängige Verpflegungswünsche als Vorschlagsliste. */
+export const VERPFLEGUNG_VORSCHLAEGE = [
+  'Vegetarisch',
+  'Vegan',
+  'Glutenfrei',
+  'Laktosefrei',
+]
 
 /** Diese Status zählen als zahlende Teilnehmer in der Kalkulation. */
 export const ZAHLENDE_STATUS: TeilnehmerStatus[] = ['angemeldet', 'bestaetigt']

@@ -3,6 +3,7 @@ import { Etikett, Karte, Kennzahl, Knopf, Seitenkopf } from '../components/ui'
 import {
   berechneKalkulation,
   berechneTeilnehmerpreis,
+  berechneVerpflegung,
   berechneZimmerbelegung,
   istZahlend,
   ohneZimmer,
@@ -22,6 +23,11 @@ export function Uebersicht() {
     status,
     anzahl: daten.teilnehmer.filter((t) => t.status === status).length,
   }))
+
+  const verpflegung = berechneVerpflegung(daten.teilnehmer)
+  const beitragsfrei = daten.teilnehmer.filter(
+    (t) => t.beitragsfrei && t.status !== 'storniert',
+  ).length
 
   const offeneZahler = daten.teilnehmer
     .filter(istZahlend)
@@ -75,7 +81,7 @@ export function Uebersicht() {
         <Kennzahl
           label="Anmeldungen"
           wert={String(k.personen)}
-          zusatz={`${daten.teilnehmer.filter((t) => t.status === 'warteliste').length} auf Warteliste`}
+          zusatz={`${daten.teilnehmer.filter((t) => t.status === 'warteliste').length} auf Warteliste · ${beitragsfrei} kostenlos`}
         />
         <Kennzahl
           label="Betten belegt"
@@ -155,6 +161,22 @@ export function Uebersicht() {
           ) : null}
         </Karte>
       </div>
+
+      {verpflegung.length > 0 ? (
+        <Karte titel="Verpflegungswünsche für die Unterkunft">
+          <ul className="flex flex-wrap gap-2">
+            {verpflegung.map((wunsch) => (
+              <li
+                key={wunsch.bezeichnung}
+                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm"
+              >
+                {wunsch.bezeichnung}
+                <span className="ml-2 font-semibold tabular-nums">{wunsch.anzahl}</span>
+              </li>
+            ))}
+          </ul>
+        </Karte>
+      ) : null}
 
       {offeneZahler.length > 0 ? (
         <Karte

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { ListenImportDialog } from '../components/ListenImportDialog'
 import { TeilnehmerDialog } from '../components/TeilnehmerDialog'
 import { Auswahl, Eingabe, Etikett, Karte, Knopf, LeerZustand, Seitenkopf } from '../components/ui'
 import { berechneTeilnehmerpreis } from '../domain/kalkulation'
@@ -26,6 +27,7 @@ export function Anmeldungen() {
   const [statusFilter, setStatusFilter] = useState<TeilnehmerStatus | 'alle'>('alle')
   const [zahlungsFilter, setZahlungsFilter] = useState<'alle' | 'offen' | 'bezahlt'>('alle')
   const [dialogOffen, setDialogOffen] = useState(false)
+  const [importOffen, setImportOffen] = useState(false)
   const [bearbeiteId, setBearbeiteId] = useState<string | undefined>()
 
   const zeilen = useMemo(() => {
@@ -86,6 +88,7 @@ export function Anmeldungen() {
         'Status',
         'Zimmer',
         'Skipass',
+        'Essen',
         'Gesamtpreis',
         'Bezahlt',
         'Offen',
@@ -102,6 +105,7 @@ export function Anmeldungen() {
         STATUS_LABEL[teilnehmer.status],
         daten.zimmer.find((z) => z.id === teilnehmer.zimmerId)?.bezeichnung ?? '',
         daten.skipassTypen.find((s) => s.id === teilnehmer.skipassTypId)?.bezeichnung ?? '',
+        teilnehmer.verpflegung ?? '',
         preis.gesamt,
         preis.bezahlt,
         preis.offen,
@@ -118,6 +122,7 @@ export function Anmeldungen() {
         beschreibung="Alle Teilnehmerinnen und Teilnehmer der Ausfahrt mit Preis, Zahlungsstand und Zuordnungen."
         aktion={
           <>
+            <Knopf onClick={() => setImportOffen(true)}>Liste importieren</Knopf>
             <Knopf onClick={csvExport} disabled={zeilen.length === 0}>
               CSV exportieren
             </Knopf>
@@ -209,6 +214,12 @@ export function Anmeldungen() {
                       <div className="flex flex-wrap gap-1">
                         <Etikett>{ALTERSGRUPPE_LABEL[teilnehmer.altersgruppe]}</Etikett>
                         {teilnehmer.mitglied ? null : <Etikett ton="gelb">Gast</Etikett>}
+                        {teilnehmer.beitragsfrei ? (
+                          <Etikett ton="gruen">kostenlos</Etikett>
+                        ) : null}
+                        {teilnehmer.verpflegung ? (
+                          <Etikett>{teilnehmer.verpflegung}</Etikett>
+                        ) : null}
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
@@ -268,6 +279,11 @@ export function Anmeldungen() {
         offen={dialogOffen}
         teilnehmerId={bearbeiteId}
         onSchliessen={() => setDialogOffen(false)}
+      />
+
+      <ListenImportDialog
+        offen={importOffen}
+        onSchliessen={() => setImportOffen(false)}
       />
     </>
   )

@@ -4,6 +4,7 @@ import {
   ALTERSGRUPPEN,
   ALTERSGRUPPE_LABEL,
   STATUS_LABEL,
+  VERPFLEGUNG_VORSCHLAEGE,
   type Teilnehmer,
   type TeilnehmerStatus,
 } from '../domain/types'
@@ -23,7 +24,9 @@ function leererTeilnehmer(): TeilnehmerEntwurf {
     geburtsdatum: '',
     altersgruppe: 'erwachsener',
     mitglied: true,
+    beitragsfrei: false,
     status: 'angemeldet',
+    verpflegung: '',
     zimmerId: undefined,
     skipassTypId: undefined,
     zusatzposten: [],
@@ -89,8 +92,8 @@ export function TeilnehmerDialog({
   )
 
   const speichern = () => {
-    if (!entwurf.vorname.trim() || !entwurf.nachname.trim()) {
-      setFehler('Vor- und Nachname sind Pflichtfelder.')
+    if (!entwurf.vorname.trim() && !entwurf.nachname.trim()) {
+      setFehler('Bitte mindestens einen Namen eintragen.')
       return
     }
     if (bestehend) {
@@ -221,6 +224,22 @@ export function TeilnehmerDialog({
               ))}
             </Auswahl>
           </Feld>
+          <Feld
+            label="Verpflegung"
+            hinweis="Wunsch oder Unverträglichkeit für die Unterkunft."
+          >
+            <Eingabe
+              list="verpflegung-vorschlaege"
+              value={entwurf.verpflegung ?? ''}
+              placeholder="z. B. Vegetarisch"
+              onChange={(e) => aendere('verpflegung', e.target.value)}
+            />
+            <datalist id="verpflegung-vorschlaege">
+              {VERPFLEGUNG_VORSCHLAEGE.map((wunsch) => (
+                <option key={wunsch} value={wunsch} />
+              ))}
+            </datalist>
+          </Feld>
           <Feld label="Rabatt (€)">
             <Eingabe
               type="number"
@@ -237,6 +256,24 @@ export function TeilnehmerDialog({
             />
           </Feld>
         </div>
+
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 rounded border-slate-300"
+            checked={entwurf.beitragsfrei}
+            onChange={(e) => aendere('beitragsfrei', e.target.checked)}
+          />
+          <span>
+            <span className="font-medium text-slate-900">
+              Kostenlose Teilnahme (Busfahrer, Helfer)
+            </span>
+            <span className="mt-0.5 block text-slate-600">
+              Zahlt keinen Beitrag, belegt aber ein Bett und zählt bei der
+              Kostenhochrechnung mit.
+            </span>
+          </span>
+        </label>
 
         <Feld label="Notiz">
           <Textfeld

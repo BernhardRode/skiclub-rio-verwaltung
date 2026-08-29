@@ -47,8 +47,11 @@ export function berechneTeilnehmerpreis(
   )
   const rabatt = teilnehmer.rabatt || 0
 
+  // Stornierte und beitragsfreie Teilnehmer zahlen nichts. Beitragsfreie
+  // belegen aber weiter ein Bett und verursachen Kosten – sie bleiben deshalb
+  // in der Personenzahl der Hochrechnung.
   const gesamt =
-    teilnehmer.status === 'storniert'
+    teilnehmer.status === 'storniert' || teilnehmer.beitragsfrei
       ? 0
       : grundpreis + zimmerzuschlag + skipass + zusatzposten - rabatt
 
@@ -188,6 +191,25 @@ export function berechneZimmerbelegung(
 /** Teilnehmer, die noch kein Zimmer haben (ohne Stornierungen). */
 export function ohneZimmer(teilnehmer: Teilnehmer[]): Teilnehmer[] {
   return teilnehmer.filter((t) => !t.zimmerId && t.status !== 'storniert')
+}
+
+export interface Verpflegungswunsch {
+  bezeichnung: string
+  anzahl: number
+}
+
+/** Zusammenfassung der Verpflegungswünsche für die Unterkunft. */
+export function berechneVerpflegung(teilnehmer: Teilnehmer[]): Verpflegungswunsch[] {
+  const zaehler = new Map<string, number>()
+  for (const person of teilnehmer) {
+    if (person.status === 'storniert') continue
+    const wunsch = person.verpflegung?.trim()
+    if (!wunsch) continue
+    zaehler.set(wunsch, (zaehler.get(wunsch) ?? 0) + 1)
+  }
+  return [...zaehler.entries()]
+    .map(([bezeichnung, anzahl]) => ({ bezeichnung, anzahl }))
+    .sort((a, b) => b.anzahl - a.anzahl || a.bezeichnung.localeCompare(b.bezeichnung, 'de'))
 }
 
 export interface SkipassBedarf {

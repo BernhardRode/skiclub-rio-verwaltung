@@ -12,6 +12,7 @@ import type {
   Zimmer,
   Zusatzposten,
 } from '../domain/types'
+import type { ImportTeilnehmer } from '../lib/listenImport'
 import { neueId } from '../lib/id'
 
 export const SPEICHER_SCHLUESSEL = 'skiclub-rio-galtuer'
@@ -26,6 +27,10 @@ interface AusfahrtStore {
   setzePreise: (aenderung: Partial<Preise>) => void
 
   teilnehmerAnlegen: (teilnehmer: NeuerTeilnehmer) => string
+  teilnehmerlisteUebernehmen: (
+    eintraege: ImportTeilnehmer[],
+    optionen: { zimmerAnlegen: boolean; ersetzen: boolean },
+  ) => void
   teilnehmerAendern: (id: string, aenderung: Partial<Teilnehmer>) => void
   teilnehmerLoeschen: (id: string) => void
   zimmerZuordnen: (teilnehmerId: string, zimmerId?: string) => void
@@ -54,6 +59,17 @@ interface AusfahrtStore {
 
   datenErsetzen: (daten: AusfahrtDaten) => void
   zuruecksetzen: () => void
+}
+
+/** Füllt Felder auf, die in älteren Ständen oder Importen fehlen können. */
+function normalisiereTeilnehmer(liste: Teilnehmer[]): Teilnehmer[] {
+  return liste.map((teilnehmer) => ({
+    ...teilnehmer,
+    beitragsfrei: teilnehmer.beitragsfrei ?? false,
+    rabatt: teilnehmer.rabatt ?? 0,
+    zusatzposten: teilnehmer.zusatzposten ?? [],
+    zahlungen: teilnehmer.zahlungen ?? [],
+  }))
 }
 
 function aktualisiere<T extends { id: string }>(
@@ -105,6 +121,57 @@ export const useAusfahrt = create<AusfahrtStore>()(
         }))
         return id
       },
+
+      teilnehmerlisteUebernehmen: (eintraege, optionen) =>
+        set((state) => {
+          const zimmer = [...state.daten.zimmer]
+          const nachBezeichnung = new Map(
+            zimmer.map((z) => [z.bezeichnung.toLowerCase(), z]),
+          )
+
+          if (optionen.zimmerAnlegen) {
+            // Bettenzahl aus der Belegung der Liste ableiten – nachträglich
+            // in der Zimmerverwaltung korrigierbar.
+            const belegung = new Map<string, number>()
+            for (const eintrag of eintraege) {
+              const bezeichnung = eintrag.zimmerBezeichnung?.trim()
+              if (!bezeichnung) continue
+              belegung.set(bezeichnung, (belegung.get(bezeichnung) ?? 0) + 1)
+            }
+            for (const [bezeichnung, betten] of belegung) {
+              if (nachBezeichnung.has(bezeichnung.toLowerCase())) continue
+              const neu = {
+                id: neueId(),
+                bezeichnung,
+                kategorie: betten === 1 ? 'Einzelzimmer' : `${betten}-Bett-Zimmer`,
+                betten,
+                zuschlagProPerson: 0,
+              }
+              zimmer.push(neu)
+              nachBezeichnung.set(bezeichnung.toLowerCase(), neu)
+            }
+          }
+
+          const heute = new Date().toISOString().slice(0, 10)
+          const uebernommen = eintraege.map(({ zimmerBezeichnung, ...rest }) => ({
+            ...rest,
+            id: neueId(),
+            angemeldetAm: heute,
+            zimmerId: zimmerBezeichnung
+              ? nachBezeichnung.get(zimmerBezeichnung.trim().toLowerCase())?.id
+              : undefined,
+          }))
+
+          return {
+            daten: {
+              ...state.daten,
+              zimmer,
+              teilnehmer: optionen.ersetzen
+                ? uebernommen
+                : [...state.daten.teilnehmer, ...uebernommen],
+            },
+          }
+        }),
 
       teilnehmerAendern: (id, aenderung) =>
         set((state) => ({
@@ -281,9 +348,13 @@ export const useAusfahrt = create<AusfahrtStore>()(
         const gespeichert = (persistiert as { daten?: Partial<AusfahrtDaten> } | undefined)
           ?.daten
         if (!gespeichert) return aktuell
+        const zusammengefuehrt = { ...erstelleStartdaten(), ...gespeichert }
         return {
           ...aktuell,
-          daten: { ...erstelleStartdaten(), ...gespeichert },
+          daten: {
+            ...zusammengefuehrt,
+            teilnehmer: normalisiereTeilnehmer(zusammengefuehrt.teilnehmer),
+          },
         }
       },
     },
@@ -320,6 +391,7 @@ export function pruefeImport(roh: unknown): AusfahrtDaten {
   return {
     ...start,
     ...kandidat,
+    teilnehmer: normalisiereTeilnehmer(kandidat.teilnehmer as Teilnehmer[]),
     version: DATEN_VERSION,
     ausfahrt: { ...start.ausfahrt, ...kandidat.ausfahrt },
     preise: {

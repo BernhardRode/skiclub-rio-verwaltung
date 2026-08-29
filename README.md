@@ -11,8 +11,8 @@ bringen.
 
 | Bereich | Inhalt |
 | --- | --- |
-| **Übersicht** | Kennzahlen zu Anmeldungen, Bettenbelegung, Saldo und offenen Beiträgen, dazu eine Checkliste der nächsten Schritte. |
-| **Anmeldungen** | Teilnehmerverwaltung mit Altersgruppe, Mitgliedschaft, Status (angemeldet / bestätigt / Warteliste / storniert), Zimmer- und Skipass-Zuordnung, individuellen Zusatzposten, Rabatten und Zahlungseingängen. Suche, Filter und CSV-Export. |
+| **Übersicht** | Kennzahlen zu Anmeldungen, Bettenbelegung, Saldo und offenen Beiträgen, Verpflegungswünsche für die Unterkunft und eine Checkliste der nächsten Schritte. |
+| **Anmeldungen** | Teilnehmerverwaltung mit Altersgruppe, Mitgliedschaft, Status (angemeldet / bestätigt / Warteliste / storniert), Verpflegungswunsch, kostenloser Teilnahme, Zimmer- und Skipass-Zuordnung, individuellen Zusatzposten, Rabatten und Zahlungseingängen. Suche, Filter, CSV-Export und **CSV-Import bestehender Listen**. |
 | **Zimmer** | Zimmer der Unterkunft mit Bettenzahl und Zuschlag pro Person. Belegung per Auswahl, Warnung bei Überbelegung, Liste der noch nicht zugeordneten Personen, Zimmerplan als CSV. |
 | **Skipässe** | Passtypen mit Gültigkeitsdauer, Einkaufs- und Verkaufspreis sowie zulässigen Altersgruppen. Bedarfsübersicht je Typ inklusive Bestellliste als CSV. |
 | **Preise** | Grundpreise je Altersgruppe – getrennt für Mitglieder und Gäste – plus Auswertung, wie sich die Anmeldungen auf die Gruppen verteilen. |
@@ -33,10 +33,34 @@ Grundpreis (Altersgruppe × Mitglied/Gast)
 = Gesamtpreis
 ```
 
+Zwei Sonderfälle sind eingebaut: **stornierte** Anmeldungen zählen weder als Einnahme
+noch als Kopf in der Hochrechnung, **beitragsfreie** Teilnehmer (Busfahrer, Helfer)
+zahlen nichts, belegen aber ein Bett und verursachen Kosten – sie bleiben deshalb in der
+Personenzahl. Personen auf der Warteliste zählen ebenfalls nicht mit.
+
 Auf der Ausgabenseite stehen die erfassten Kostenposten – hochgerechnet auf die Zahl der
 zahlenden Personen und die Nächte – sowie optional der automatisch verbuchte
-Skipass-Einkauf. Stornierte Anmeldungen zählen weder als Einnahme noch als Kopf in der
-Hochrechnung; Personen auf der Warteliste ebenfalls nicht.
+Skipass-Einkauf. 
+
+## Import bestehender Listen
+
+Unter *Anmeldungen → Liste importieren* lässt sich eine vorhandene Teilnehmerliste als
+CSV übernehmen – etwa die Liste des Vorjahres, aus Excel über *Datei → Speichern unter →
+CSV*. Der Import ist auf gewachsene Vereinslisten ausgelegt:
+
+- Eine vorangestellte Titelzeile wird übersprungen; als Kopfzeile gilt die Zeile mit den
+  meisten erkannten Spalten.
+- Erkannt werden `Name` (oder `Vorname`/`Nachname`), `Tarif`, `Zimmer`, `Essen`,
+  `E-Mail`, `Telefon` und `Geburtsdatum` – Groß-/Kleinschreibung und Umlaute egal.
+- Namen im Format „Nachname, Vorname“ werden getrennt, Namen ohne Komma bleiben stehen.
+- Tarifangaben werden gedeutet: `Mitglied`, `Nicht-Mitglied`, `Mitglied, Jugend`,
+  `Kostenlos`. Ein Einzelzimmer-Tarif wird bewusst **nicht** als Tarif geführt – der
+  Aufschlag hängt am Zimmer, nicht an der Person.
+- Zimmer aus der Liste können auf Wunsch direkt angelegt werden; die Bettenzahl ergibt
+  sich aus der Belegung und lässt sich anschließend korrigieren.
+
+Als Trennzeichen werden Semikolon, Tabulator und Komma erkannt, Anführungszeichen
+werden beachtet.
 
 ## Datenhaltung
 
@@ -51,6 +75,9 @@ Daraus folgen zwei Dinge für die Praxis:
 - **Regelmäßig sichern.** Unter *Einstellungen → Sicherung und Übergabe* lässt sich der
   komplette Stand als JSON exportieren und auf einem anderen Gerät oder bei der Übergabe
   an die nächste Ausfahrtsleitung wieder importieren.
+
+Teilnehmerdaten gehören nicht ins Repository. `.gitignore` schließt deshalb `*.xlsx`,
+`*.csv` und die JSON-Sicherungen aus.
 
 Soll später mehrgleisig gearbeitet werden, wäre der nächste Schritt ein Backend
 (z. B. Supabase) hinter der bestehenden Store-Schicht in `src/store/useAusfahrt.ts` –
@@ -76,7 +103,7 @@ src/
 ├── store/         Zustand-Store mit localStorage-Persistenz und Import-Prüfung
 ├── components/    Layout, Dialog, Formularbausteine
 ├── pages/         Die acht Ansichten der App
-└── lib/           Formatierung, CSV-Export, ID-Erzeugung
+└── lib/           Formatierung, CSV-Export, Listenimport, ID-Erzeugung
 ```
 
 ## Deployment

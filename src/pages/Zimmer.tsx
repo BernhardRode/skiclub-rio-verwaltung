@@ -69,7 +69,7 @@ export function Zimmer() {
 
   const csvExport = () => {
     const inhalt = alsCsv(
-      ['Zimmer', 'Haus', 'Kategorie', 'Betten', 'Belegt', 'Bewohner'],
+      ['Zimmer', 'Haus', 'Kategorie', 'Betten', 'Belegt', 'Bewohner', 'Essen'],
       belegungen.map((b) => [
         b.zimmer.bezeichnung,
         b.zimmer.haus ?? '',
@@ -77,6 +77,10 @@ export function Zimmer() {
         b.zimmer.betten,
         b.belegt.length,
         b.belegt.map((t) => `${t.vorname} ${t.nachname}`).join(', '),
+        b.belegt
+          .filter((t) => t.verpflegung)
+          .map((t) => `${t.vorname} ${t.nachname}: ${t.verpflegung}`)
+          .join(', '),
       ]),
     )
     dateiHerunterladen(inhalt, `zimmerplan-galtuer-${daten.ausfahrt.jahr}.csv`)
