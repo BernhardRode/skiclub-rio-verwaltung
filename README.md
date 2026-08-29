@@ -14,7 +14,7 @@ bringen.
 | **Übersicht** | Kennzahlen zu Anmeldungen, Bettenbelegung, Saldo und offenen Beiträgen, Verpflegungswünsche für die Unterkunft und eine Checkliste der nächsten Schritte. |
 | **Anmeldungen** | Teilnehmerverwaltung mit Altersgruppe, Mitgliedschaft, Status (angemeldet / bestätigt / Warteliste / storniert), Verpflegungswunsch, kostenloser Teilnahme, Zimmer- und Skipass-Zuordnung, individuellen Zusatzposten, Rabatten und Zahlungseingängen. Suche, Filter, CSV-Export und **CSV-Import bestehender Listen**. |
 | **Zimmer** | Der Zimmerplan der Unterkunft ist fest hinterlegt (24 Zimmer, 56 Betten, Haupthaus und Nachbarhaus) und beim ersten Start sofort da. Zimmer lassen sich für eine Saison sperren, statt sie zu löschen. Belegung per Auswahl, Warnung bei Überbelegung, Liste der noch nicht zugeordneten Personen, Zuschlag pro Zimmer, Zimmerplan als CSV. |
-| **Skipässe** | Passtypen mit Gültigkeitsdauer, Einkaufs- und Verkaufspreis sowie zulässigen Altersgruppen. Verlinkt die offizielle Preisliste der Bergbahnen, hält fest, wann die Preise zuletzt geprüft wurden, und warnt bei Passtypen ohne Preis. Bedarfsübersicht je Typ inklusive Bestellliste als CSV. |
+| **Skipässe** | Bestellvorschlag mit Variantenvergleich (siehe unten), dazu Passtypen mit Gültigkeitsdauer, Einkaufs- und Verkaufspreis und zulässigen Altersgruppen. Verlinkt die offizielle Preisliste der Bergbahnen, hält fest, wann die Preise zuletzt geprüft wurden, und warnt bei Passtypen ohne Preis. Bedarfsübersicht je Typ inklusive Bestellliste als CSV. |
 | **Preise** | Grundpreise je Altersgruppe – getrennt für Mitglieder und Gäste – plus Auswertung, wie sich die Anmeldungen auf die Gruppen verteilen. |
 | **Ausgaben** | Kostenposten pauschal, pro Person oder pro Person und Nacht, mit Kategorie, Fälligkeit und Bezahlt-Status. Die Hochrechnung auf die aktuelle Teilnehmerzahl passiert automatisch. |
 | **Kalkulation** | Einnahmen gegen Ausgaben, Saldo, Deckungsgrad, Deckungsbeitrag und Break-even-Teilnehmerzahl. Ein Klick gleicht die Grundpreise so aus, dass die Ausfahrt auf Null aufgeht. |
@@ -81,6 +81,27 @@ weist die Skipass-Seite oben darauf hin, welchen Typen der Preis noch fehlt.
 Neben den Preisen lässt sich festhalten, **wann sie zuletzt geprüft wurden**
 (`preise.skipassPreisstand`) – hilfreich, wenn die Planung über mehrere Monate läuft und
 die Bergbahnen zwischendurch neue Tarife veröffentlichen.
+
+### Bestellvorschlag: Welche Pässe kaufen wir?
+
+Weil die Tarife gestaffelt sind, ist die günstigste Variante nicht immer die
+offensichtliche. `berechneSkipassEmpfehlung` beantwortet die Bestellfrage für die
+gesamte angemeldete Gruppe:
+
+- Je Altersgruppe wird der **günstigste passende Pass** ermittelt – verglichen wird über
+  den **Einkaufspreis**, also den Betrag, den der Verein an die Bergbahn zahlt.
+- Daraus entsteht eine **Bestellliste**: wie viele Pässe welchen Typs, zu welcher Summe.
+- Ein Balkendiagramm stellt die Varianten je Altersgruppe gegenüber. Die Balken zeigen
+  den **Preis pro Person** auf einer gemeinsamen Skala – Gruppensummen liegen je nach
+  Kopfzahl um Größenordnungen auseinander, dort wäre die kleinste Gruppe nicht mehr
+  ablesbar. Die Empfehlung trägt den Akzentton, die Alternativen einen Grauton, und jeder
+  Balken ist direkt beschriftet, damit die Zuordnung nie allein über die Farbe läuft.
+- *Empfehlung übernehmen* trägt den vorgeschlagenen Pass bei allen Personen ein.
+
+Beitragsfreie Teilnehmer sind enthalten – ihren Pass zahlt ebenfalls der Verein.
+Personen auf der Warteliste und Stornierungen zählen nicht mit. Passtypen ohne
+Einkaufspreis bleiben aus dem Vergleich heraus und werden getrennt ausgewiesen, damit
+keine 0 € als „günstigste Variante“ gewinnt.
 
 ## Import bestehender Listen
 

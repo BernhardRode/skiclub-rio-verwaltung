@@ -12,8 +12,6 @@ export const SKIPASS_QUELLE = {
   url: 'https://www.galtuer.com/de/winter/betriebszeiten-preise/skipasspreise-silvapark',
 } as const
 
-const PREIS_NOCH_EINTRAGEN =
-  'Einkaufs- und Verkaufspreis der aktuellen Saison noch eintragen (siehe Preisliste der Bergbahnen).'
 
 /**
  * Zimmer der Unterkunft. Sie bleiben von Jahr zu Jahr gleich und sind deshalb
@@ -130,7 +128,6 @@ export function erstelleStartdaten(): AusfahrtDaten {
         ekPreis: 0,
         vkPreis: 0,
         altersgruppen: ['erwachsener'],
-        notiz: PREIS_NOCH_EINTRAGEN,
       },
       {
         id: skipassJugend,
@@ -139,7 +136,6 @@ export function erstelleStartdaten(): AusfahrtDaten {
         ekPreis: 0,
         vkPreis: 0,
         altersgruppen: ['jugendlicher'],
-        notiz: PREIS_NOCH_EINTRAGEN,
       },
       {
         id: skipassKind,
@@ -148,7 +144,6 @@ export function erstelleStartdaten(): AusfahrtDaten {
         ekPreis: 0,
         vkPreis: 0,
         altersgruppen: ['kind', 'kleinkind'],
-        notiz: PREIS_NOCH_EINTRAGEN,
       },
     ],
     ausgaben: [

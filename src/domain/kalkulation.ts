@@ -1,5 +1,7 @@
 import {
+  ALTERSGRUPPEN,
   ZAHLENDE_STATUS,
+  type Altersgruppe,
   type Ausgabe,
   type AusfahrtDaten,
   type SkipassTyp,
@@ -239,4 +241,136 @@ export function berechneSkipassBedarf(
     const vkSumme = anzahl * typ.vkPreis
     return { typ, anzahl, ekSumme, vkSumme, marge: vkSumme - ekSumme }
   })
+}
+
+export interface PassOption {
+  typ: SkipassTyp
+  anzahl: number
+  ekSumme: number
+  vkSumme: number
+  /** Günstigster vergleichbarer Pass der Altersgruppe. */
+  empfohlen: boolean
+  /** Mehrkosten gegenüber der Empfehlung. */
+  mehrkosten: number
+}
+
+export interface GruppenEmpfehlung {
+  altersgruppe: Altersgruppe
+  personen: number
+  /** Vergleichbare Pässe, günstigster zuerst. */
+  optionen: PassOption[]
+  empfehlung?: SkipassTyp
+  /** Passende Typen, bei denen der Einkaufspreis fehlt. */
+  ohnePreis: SkipassTyp[]
+}
+
+export interface Bestellposten {
+  typ: SkipassTyp
+  anzahl: number
+  ekSumme: number
+  vkSumme: number
+}
+
+export interface SkipassEmpfehlung {
+  gruppen: GruppenEmpfehlung[]
+  bestellung: Bestellposten[]
+  ekGesamt: number
+  vkGesamt: number
+  /** Was die jeweils teuerste passende Variante kosten würde. */
+  teuersteEk: number
+  ersparnis: number
+  /** Einkaufswert der aktuell von Hand gesetzten Zuordnung. */
+  aktuellEk: number
+  /** Nur dann ist der Vergleich mit der aktuellen Zuordnung aussagekräftig. */
+  aktuellVollstaendig: boolean
+  /** Personen, für die kein Pass mit Preis hinterlegt ist. */
+  personenOhneOption: number
+}
+
+/** Ein Pass ist nur vergleichbar, wenn sein Einkaufspreis feststeht. */
+function istVergleichbar(typ: SkipassTyp): boolean {
+  return typ.ekPreis > 0
+}
+
+function giltFuer(typ: SkipassTyp, altersgruppe: Altersgruppe): boolean {
+  return typ.altersgruppen.length === 0 || typ.altersgruppen.includes(altersgruppe)
+}
+
+/**
+ * Beantwortet die Bestellfrage: Welche Pässe kaufen wir für die angemeldete
+ * Gruppe, und was kosten die Alternativen? Verglichen wird über den
+ * Einkaufspreis – das ist der Betrag, den der Verein an die Bergbahn zahlt.
+ */
+export function berechneSkipassEmpfehlung(
+  daten: Pick<AusfahrtDaten, 'teilnehmer' | 'skipassTypen'>,
+): SkipassEmpfehlung {
+  const zahlende = daten.teilnehmer.filter(istZahlend)
+  const gruppen: GruppenEmpfehlung[] = []
+  const bestellMenge = new Map<string, number>()
+  let teuersteEk = 0
+  let personenOhneOption = 0
+
+  for (const altersgruppe of ALTERSGRUPPEN) {
+    const personen = zahlende.filter((t) => t.altersgruppe === altersgruppe).length
+    if (personen === 0) continue
+
+    const passend = daten.skipassTypen.filter((typ) => giltFuer(typ, altersgruppe))
+    const vergleichbar = passend
+      .filter(istVergleichbar)
+      .sort((a, b) => a.ekPreis - b.ekPreis)
+    const guenstigster = vergleichbar[0]
+
+    if (guenstigster) {
+      bestellMenge.set(guenstigster.id, (bestellMenge.get(guenstigster.id) ?? 0) + personen)
+      teuersteEk += vergleichbar[vergleichbar.length - 1].ekPreis * personen
+    } else {
+      personenOhneOption += personen
+    }
+
+    gruppen.push({
+      altersgruppe,
+      personen,
+      optionen: vergleichbar.map((typ) => ({
+        typ,
+        anzahl: personen,
+        ekSumme: typ.ekPreis * personen,
+        vkSumme: typ.vkPreis * personen,
+        empfohlen: typ.id === guenstigster?.id,
+        mehrkosten: (typ.ekPreis - (guenstigster?.ekPreis ?? 0)) * personen,
+      })),
+      empfehlung: guenstigster,
+      ohnePreis: passend.filter((typ) => !istVergleichbar(typ)),
+    })
+  }
+
+  const bestellung: Bestellposten[] = [...bestellMenge.entries()]
+    .map(([typId, anzahl]) => {
+      const typ = daten.skipassTypen.find((t) => t.id === typId)!
+      return {
+        typ,
+        anzahl,
+        ekSumme: typ.ekPreis * anzahl,
+        vkSumme: typ.vkPreis * anzahl,
+      }
+    })
+    .sort((a, b) => b.ekSumme - a.ekSumme)
+
+  const ekGesamt = bestellung.reduce((summe, posten) => summe + posten.ekSumme, 0)
+  const vkGesamt = bestellung.reduce((summe, posten) => summe + posten.vkSumme, 0)
+
+  const aktuellEk = summeSkipassEinkauf(zahlende, daten.skipassTypen)
+  const aktuellVollstaendig =
+    zahlende.length > 0 && zahlende.every((t) => t.skipassTypId)
+
+  return {
+    gruppen,
+    bestellung,
+    ekGesamt,
+    vkGesamt,
+    teuersteEk,
+    ersparnis: teuersteEk - ekGesamt,
+    aktuellEk,
+    aktuellVollstaendig,
+    personenOhneOption,
+  }
 }

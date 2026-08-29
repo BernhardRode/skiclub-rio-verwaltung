@@ -70,7 +70,10 @@ describe('Skipass-Grunddaten', () => {
     const typen = erstelleStartdaten().skipassTypen
     expect(typen).toHaveLength(3)
     expect(typen.every((t) => t.ekPreis === 0 && t.vkPreis === 0)).toBe(true)
-    expect(typen.every((t) => t.notiz && t.notiz.length > 0)).toBe(true)
+    // Kein Platzhalter-Hinweis in den Daten: Auf fehlende Preise weist die
+    // Skipass-Seite dynamisch hin, damit der Hinweis nicht stehen bleibt,
+    // sobald ein Preis eingetragen ist.
+    expect(typen.every((t) => t.notiz === undefined)).toBe(true)
   })
 
   it('deckt Erwachsene, Jugend und Kinder ab', () => {

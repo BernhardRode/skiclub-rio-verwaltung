@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Dialog } from '../components/Dialog'
+import { SkipassEmpfehlung } from '../components/SkipassEmpfehlung'
 import {
   Eingabe,
   Etikett,
@@ -115,6 +116,8 @@ export function Skipaesse() {
           </>
         }
       />
+
+      <SkipassEmpfehlung />
 
       <Karte titel="Preisliste der Bergbahnen">
         <div className="space-y-3 text-sm">
