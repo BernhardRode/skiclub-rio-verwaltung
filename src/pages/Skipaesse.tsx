@@ -3,6 +3,7 @@ import { Dialog } from '../components/Dialog'
 import {
   Eingabe,
   Etikett,
+  ExternerLink,
   Feld,
   Karte,
   Knopf,
@@ -10,6 +11,7 @@ import {
   Seitenkopf,
   Textfeld,
 } from '../components/ui'
+import { SKIPASS_QUELLE } from '../domain/defaults'
 import { berechneSkipassBedarf, istZahlend } from '../domain/kalkulation'
 import {
   ALTERSGRUPPEN,
@@ -18,7 +20,7 @@ import {
   type SkipassTyp,
 } from '../domain/types'
 import { alsCsv, dateiHerunterladen } from '../lib/csv'
-import { euro, plural } from '../lib/format'
+import { datum, euro, plural } from '../lib/format'
 import { useAusfahrt, useDaten } from '../store/useAusfahrt'
 
 type SkipassEntwurf = Omit<SkipassTyp, 'id'>
@@ -34,7 +36,7 @@ const leererPass = (): SkipassEntwurf => ({
 
 export function Skipaesse() {
   const daten = useDaten()
-  const { skipassAnlegen, skipassAendern, skipassLoeschen } = useAusfahrt()
+  const { skipassAnlegen, skipassAendern, skipassLoeschen, setzePreise } = useAusfahrt()
   const [dialogOffen, setDialogOffen] = useState(false)
   const [bearbeiteId, setBearbeiteId] = useState<string | undefined>()
   const [entwurf, setEntwurf] = useState<SkipassEntwurf>(leererPass())
@@ -43,6 +45,8 @@ export function Skipaesse() {
   const ohnePass = daten.teilnehmer.filter((t) => istZahlend(t) && !t.skipassTypId)
   const summeEk = bedarf.reduce((s, b) => s + b.ekSumme, 0)
   const summeVk = bedarf.reduce((s, b) => s + b.vkSumme, 0)
+  const ohnePreis = daten.skipassTypen.filter((t) => t.ekPreis === 0 && t.vkPreis === 0)
+  const preisstand = daten.preise.skipassPreisstand
 
   const oeffnen = (typ?: SkipassTyp) => {
     if (typ) {
@@ -111,6 +115,46 @@ export function Skipaesse() {
           </>
         }
       />
+
+      <Karte titel="Preisliste der Bergbahnen">
+        <div className="space-y-3 text-sm">
+          <p className="text-slate-600">
+            Die Tarife für den Silvapark Galtür ändern sich jede Saison. Maßgeblich ist
+            immer die offizielle Preisliste – die App rechnet nur mit den Preisen, die
+            hier eingetragen sind.
+          </p>
+          <p>
+            <ExternerLink href={SKIPASS_QUELLE.url}>{SKIPASS_QUELLE.name}</ExternerLink>
+          </p>
+          <div className="flex flex-wrap items-end gap-4 border-t border-slate-100 pt-3">
+            <div className="w-52">
+              <Feld label="Preise geprüft am">
+                <Eingabe
+                  type="date"
+                  value={preisstand ?? ''}
+                  onChange={(e) =>
+                    setzePreise({ skipassPreisstand: e.target.value || undefined })
+                  }
+                />
+              </Feld>
+            </div>
+            <p className="pb-2 text-slate-600">
+              {preisstand
+                ? `Zuletzt geprüft am ${datum(preisstand)}.`
+                : 'Noch nicht geprüft – bitte nach dem Eintragen der Preise setzen.'}
+            </p>
+          </div>
+        </div>
+      </Karte>
+
+      {ohnePreis.length > 0 ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Bei <strong>{ohnePreis.length}</strong> von {daten.skipassTypen.length} Passtypen
+          fehlt noch der Preis:{' '}
+          {ohnePreis.map((t) => t.bezeichnung).join(', ')}. Solange dort 0 € steht, fehlen
+          die Skipässe in der Kalkulation.
+        </div>
+      ) : null}
 
       {ohnePass.length > 0 ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -247,6 +291,10 @@ export function Skipaesse() {
           </>
         }
       >
+        <p className="mb-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+          Aktuelle Tarife:{' '}
+          <ExternerLink href={SKIPASS_QUELLE.url}>{SKIPASS_QUELLE.name}</ExternerLink>
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Feld label="Bezeichnung">

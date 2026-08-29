@@ -112,6 +112,11 @@ export interface Preise {
    * aller zugeordneten Pässe). Verhindert doppelte Erfassung.
    */
   skipassEinkaufAutomatisch: boolean
+  /**
+   * Datum, an dem die Skipasspreise zuletzt an der offiziellen Preisliste
+   * geprüft wurden. Die Bergbahnen ändern die Tarife jede Saison.
+   */
+  skipassPreisstand?: string
 }
 
 export interface Ausfahrt {

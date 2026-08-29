@@ -148,6 +148,30 @@ export function Etikett({
   )
 }
 
+/** Link auf eine externe Seite – öffnet in einem neuen Tab. */
+export function ExternerLink({
+  href,
+  children,
+  className = '',
+}: {
+  href: string
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`inline-flex items-center gap-1 font-medium text-alpen-600 underline-offset-2 hover:underline ${className}`}
+    >
+      {children}
+      <span aria-hidden>↗</span>
+      <span className="sr-only">(öffnet in neuem Tab)</span>
+    </a>
+  )
+}
+
 export function LeerZustand({ text, aktion }: { text: string; aktion?: ReactNode }) {
   return (
     <div className="rounded-lg border border-dashed border-slate-300 px-6 py-10 text-center">

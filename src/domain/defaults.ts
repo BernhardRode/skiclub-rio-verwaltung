@@ -4,6 +4,18 @@ import type { AusfahrtDaten, Zimmer } from './types'
 export const DATEN_VERSION = 2
 
 /**
+ * Offizielle Preisliste der Bergbahnen Galtür. Die Tarife ändern sich jede
+ * Saison, deshalb steht in der App die Quelle statt geratener Zahlen.
+ */
+export const SKIPASS_QUELLE = {
+  name: 'Bergbahnen Galtür – Skipasspreise Silvapark',
+  url: 'https://www.galtuer.com/de/winter/betriebszeiten-preise/skipasspreise-silvapark',
+} as const
+
+const PREIS_NOCH_EINTRAGEN =
+  'Einkaufs- und Verkaufspreis der aktuellen Saison noch eintragen (siehe Preisliste der Bergbahnen).'
+
+/**
  * Zimmer der Unterkunft. Sie bleiben von Jahr zu Jahr gleich und sind deshalb
  * fest hinterlegt: 24 Zimmer mit zusammen 56 Betten, verteilt auf das
  * Haupthaus, das benachbarte Drei Länder Hotel (DL) und das Mitarbeiterzimmer
@@ -106,6 +118,7 @@ export function erstelleStartdaten(): AusfahrtDaten {
         kleinkind: { mitglied: 0, gast: 0 },
       },
       skipassEinkaufAutomatisch: true,
+      skipassPreisstand: undefined,
     },
     teilnehmer: [],
     zimmer: erstelleZimmerplan(),
@@ -114,25 +127,28 @@ export function erstelleStartdaten(): AusfahrtDaten {
         id: skipassErwachsen,
         bezeichnung: 'Silvapark Galtür – 6 Tage, Erwachsene',
         tage: 6,
-        ekPreis: 268,
-        vkPreis: 268,
+        ekPreis: 0,
+        vkPreis: 0,
         altersgruppen: ['erwachsener'],
+        notiz: PREIS_NOCH_EINTRAGEN,
       },
       {
         id: skipassJugend,
         bezeichnung: 'Silvapark Galtür – 6 Tage, Jugendliche',
         tage: 6,
-        ekPreis: 214,
-        vkPreis: 214,
+        ekPreis: 0,
+        vkPreis: 0,
         altersgruppen: ['jugendlicher'],
+        notiz: PREIS_NOCH_EINTRAGEN,
       },
       {
         id: skipassKind,
         bezeichnung: 'Silvapark Galtür – 6 Tage, Kinder',
         tage: 6,
-        ekPreis: 134,
-        vkPreis: 134,
+        ekPreis: 0,
+        vkPreis: 0,
         altersgruppen: ['kind', 'kleinkind'],
+        notiz: PREIS_NOCH_EINTRAGEN,
       },
     ],
     ausgaben: [

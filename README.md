@@ -14,7 +14,7 @@ bringen.
 | **Übersicht** | Kennzahlen zu Anmeldungen, Bettenbelegung, Saldo und offenen Beiträgen, Verpflegungswünsche für die Unterkunft und eine Checkliste der nächsten Schritte. |
 | **Anmeldungen** | Teilnehmerverwaltung mit Altersgruppe, Mitgliedschaft, Status (angemeldet / bestätigt / Warteliste / storniert), Verpflegungswunsch, kostenloser Teilnahme, Zimmer- und Skipass-Zuordnung, individuellen Zusatzposten, Rabatten und Zahlungseingängen. Suche, Filter, CSV-Export und **CSV-Import bestehender Listen**. |
 | **Zimmer** | Der Zimmerplan der Unterkunft ist fest hinterlegt (24 Zimmer, 56 Betten, Haupthaus und Nachbarhaus) und beim ersten Start sofort da. Zimmer lassen sich für eine Saison sperren, statt sie zu löschen. Belegung per Auswahl, Warnung bei Überbelegung, Liste der noch nicht zugeordneten Personen, Zuschlag pro Zimmer, Zimmerplan als CSV. |
-| **Skipässe** | Passtypen mit Gültigkeitsdauer, Einkaufs- und Verkaufspreis sowie zulässigen Altersgruppen. Bedarfsübersicht je Typ inklusive Bestellliste als CSV. |
+| **Skipässe** | Passtypen mit Gültigkeitsdauer, Einkaufs- und Verkaufspreis sowie zulässigen Altersgruppen. Verlinkt die offizielle Preisliste der Bergbahnen, hält fest, wann die Preise zuletzt geprüft wurden, und warnt bei Passtypen ohne Preis. Bedarfsübersicht je Typ inklusive Bestellliste als CSV. |
 | **Preise** | Grundpreise je Altersgruppe – getrennt für Mitglieder und Gäste – plus Auswertung, wie sich die Anmeldungen auf die Gruppen verteilen. |
 | **Ausgaben** | Kostenposten pauschal, pro Person oder pro Person und Nacht, mit Kategorie, Fälligkeit und Bezahlt-Status. Die Hochrechnung auf die aktuelle Teilnehmerzahl passiert automatisch. |
 | **Kalkulation** | Einnahmen gegen Ausgaben, Saldo, Deckungsgrad, Deckungsbeitrag und Break-even-Teilnehmerzahl. Ein Klick gleicht die Grundpreise so aus, dass die Ausfahrt auf Null aufgeht. |
@@ -63,6 +63,24 @@ darin, meldet die Zimmerseite eine Überbelegung.
 Gelöschte Zimmer holt *Fehlende Zimmer ergänzen* auf der Zimmerseite zurück; bestehende
 Zimmer bleiben dabei unangetastet. Ein Einzelzimmerzuschlag gehört an das jeweilige
 Zimmer (`Zuschlag pro Person`), nicht an die Person.
+
+## Skipasspreise
+
+Die Tarife für den Silvapark Galtür ändern sich jede Saison. Die App hinterlegt deshalb
+**keine Preise, sondern die Quelle**: Auf der Skipass-Seite steht ein Link auf die
+offizielle Preisliste der Bergbahnen Galtür
+(`SKIPASS_QUELLE` in `src/domain/defaults.ts`):
+
+<https://www.galtuer.com/de/winter/betriebszeiten-preise/skipasspreise-silvapark>
+
+Die drei mitgelieferten Passtypen (6 Tage für Erwachsene, Jugendliche und Kinder) starten
+bewusst mit **0 €**. Ein geratener Preis wäre schlimmer als gar keiner: Er würde still in
+die Null-auf-Null-Rechnung einfließen und sie falsch aussehen lassen. Solange 0 € steht,
+weist die Skipass-Seite oben darauf hin, welchen Typen der Preis noch fehlt.
+
+Neben den Preisen lässt sich festhalten, **wann sie zuletzt geprüft wurden**
+(`preise.skipassPreisstand`) – hilfreich, wenn die Planung über mehrere Monate läuft und
+die Bergbahnen zwischendurch neue Tarife veröffentlichen.
 
 ## Import bestehender Listen
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { erstelleStartdaten, erstelleZimmerplan } from './defaults'
+import { SKIPASS_QUELLE, erstelleStartdaten, erstelleZimmerplan } from './defaults'
 
 describe('Zimmerplan der Unterkunft', () => {
   it('enthält 24 Zimmer mit zusammen 56 Betten', () => {
@@ -55,5 +55,32 @@ describe('erstelleStartdaten', () => {
 
   it('startet ohne Anmeldungen', () => {
     expect(erstelleStartdaten().teilnehmer).toEqual([])
+  })
+})
+
+describe('Skipass-Grunddaten', () => {
+  it('verweist auf die offizielle Preisliste der Bergbahnen', () => {
+    expect(SKIPASS_QUELLE.url).toBe(
+      'https://www.galtuer.com/de/winter/betriebszeiten-preise/skipasspreise-silvapark',
+    )
+    expect(SKIPASS_QUELLE.url.startsWith('https://')).toBe(true)
+  })
+
+  it('liefert die Passtypen ohne Preis aus, damit keine geratenen Zahlen rechnen', () => {
+    const typen = erstelleStartdaten().skipassTypen
+    expect(typen).toHaveLength(3)
+    expect(typen.every((t) => t.ekPreis === 0 && t.vkPreis === 0)).toBe(true)
+    expect(typen.every((t) => t.notiz && t.notiz.length > 0)).toBe(true)
+  })
+
+  it('deckt Erwachsene, Jugend und Kinder ab', () => {
+    const gruppen = erstelleStartdaten().skipassTypen.flatMap((t) => t.altersgruppen)
+    expect(gruppen).toContain('erwachsener')
+    expect(gruppen).toContain('jugendlicher')
+    expect(gruppen).toContain('kind')
+  })
+
+  it('startet ohne Preisstand – der wird beim Eintragen gesetzt', () => {
+    expect(erstelleStartdaten().preise.skipassPreisstand).toBeUndefined()
   })
 })
