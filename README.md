@@ -13,7 +13,7 @@ bringen.
 | --- | --- |
 | **Übersicht** | Kennzahlen zu Anmeldungen, Bettenbelegung, Saldo und offenen Beiträgen, Verpflegungswünsche für die Unterkunft und eine Checkliste der nächsten Schritte. |
 | **Anmeldungen** | Teilnehmerverwaltung mit Altersgruppe, Mitgliedschaft, Status (angemeldet / bestätigt / Warteliste / storniert), Verpflegungswunsch, kostenloser Teilnahme, Zimmer- und Skipass-Zuordnung, individuellen Zusatzposten, Rabatten und Zahlungseingängen. Suche, Filter, CSV-Export und **CSV-Import bestehender Listen**. |
-| **Zimmer** | Der Zimmerplan der Unterkunft ist fest hinterlegt (24 Zimmer, 56 Betten) und beim ersten Start sofort da. Belegung per Auswahl, Warnung bei Überbelegung, Liste der noch nicht zugeordneten Personen, Zuschlag pro Zimmer, Zimmerplan als CSV. |
+| **Zimmer** | Der Zimmerplan der Unterkunft ist fest hinterlegt (24 Zimmer, 56 Betten, Haupthaus und Nachbarhaus) und beim ersten Start sofort da. Zimmer lassen sich für eine Saison sperren, statt sie zu löschen. Belegung per Auswahl, Warnung bei Überbelegung, Liste der noch nicht zugeordneten Personen, Zuschlag pro Zimmer, Zimmerplan als CSV. |
 | **Skipässe** | Passtypen mit Gültigkeitsdauer, Einkaufs- und Verkaufspreis sowie zulässigen Altersgruppen. Bedarfsübersicht je Typ inklusive Bestellliste als CSV. |
 | **Preise** | Grundpreise je Altersgruppe – getrennt für Mitglieder und Gäste – plus Auswertung, wie sich die Anmeldungen auf die Gruppen verteilen. |
 | **Ausgaben** | Kostenposten pauschal, pro Person oder pro Person und Nacht, mit Kategorie, Fälligkeit und Bezahlt-Status. Die Hochrechnung auf die aktuelle Teilnehmerzahl passiert automatisch. |
@@ -45,17 +45,20 @@ Skipass-Einkauf.
 ## Zimmerplan der Unterkunft
 
 Die Unterkunft bleibt von Jahr zu Jahr dieselbe, deshalb steht ihr Zimmerplan fest im
-Code (`ZIMMERPLAN` in `src/domain/defaults.ts`): 24 Zimmer mit zusammen 56 Betten,
-aufgeteilt auf Erdgeschoss (01–05), 1. Obergeschoss (101–108), 2. Obergeschoss
-(201–206), DL (DL1–DL4) und MAZ.
+Code (`ZIMMERPLAN` in `src/domain/defaults.ts`): 24 Zimmer mit zusammen 56 Betten.
 
-Zwei Hinweise dazu:
+| Bereich | Zimmer | Betten |
+| --- | --- | --- |
+| Haupthaus, Erdgeschoss | 01–05 | 9 |
+| Haupthaus, 1. Obergeschoss | 101–108 | 23 |
+| Haupthaus, 2. Obergeschoss | 201–206 | 14 |
+| Drei Länder Hotel (Nachbarhaus) | DL1–DL4 | 9 |
+| Mitarbeiterzimmer | MAZ | 1 |
 
-- Die **Bettenzahlen stammen aus der Belegung der letzten Ausfahrt**, sind also die
-  tatsächlich genutzte und nicht zwingend die maximale Kapazität. Sie lassen sich pro
-  Zimmer anpassen.
-- Die **Bereichsbezeichnungen** sind aus der Zimmernummerierung abgeleitet. Stimmen sie
-  nicht, im Zimmer bearbeiten oder in `ZIMMERPLAN` korrigieren.
+Das **MAZ steht nicht jede Saison zur Verfügung**. Zimmer lassen sich deshalb auf *nicht
+verfügbar* stellen, statt sie zu löschen: Sie bleiben im Plan, zählen aber nicht zur
+Bettenzahl und werden bei der Belegung nicht mehr angeboten. Liegt trotzdem jemand
+darin, meldet die Zimmerseite eine Überbelegung.
 
 Gelöschte Zimmer holt *Fehlende Zimmer ergänzen* auf der Zimmerseite zurück; bestehende
 Zimmer bleiben dabei unangetastet. Ein Einzelzimmerzuschlag gehört an das jeweilige

@@ -5,37 +5,54 @@ export const DATEN_VERSION = 2
 
 /**
  * Zimmer der Unterkunft. Sie bleiben von Jahr zu Jahr gleich und sind deshalb
- * fest hinterlegt – Bettenzahlen lassen sich in der Zimmerverwaltung anpassen.
- *
- * Die Bettenzahlen stammen aus der Belegung der letzten Ausfahrt (56 Plätze in
- * 24 Zimmern) und sind damit die tatsächlich genutzte, nicht zwingend die
- * maximale Kapazität.
+ * fest hinterlegt: 24 Zimmer mit zusammen 56 Betten, verteilt auf das
+ * Haupthaus, das benachbarte Drei Länder Hotel (DL) und das Mitarbeiterzimmer
+ * (MAZ), das nicht jede Saison zur Verfügung steht.
  */
-const ZIMMERPLAN: [bezeichnung: string, betten: number, bereich: string][] = [
-  ['01', 2, 'Erdgeschoss'],
-  ['02', 2, 'Erdgeschoss'],
-  ['03', 2, 'Erdgeschoss'],
-  ['04', 1, 'Erdgeschoss'],
-  ['05', 2, 'Erdgeschoss'],
-  ['101', 3, '1. Obergeschoss'],
-  ['102', 3, '1. Obergeschoss'],
-  ['103', 2, '1. Obergeschoss'],
-  ['104', 2, '1. Obergeschoss'],
-  ['105', 2, '1. Obergeschoss'],
-  ['106', 5, '1. Obergeschoss'],
-  ['107', 1, '1. Obergeschoss'],
-  ['108', 5, '1. Obergeschoss'],
-  ['201', 3, '2. Obergeschoss'],
-  ['202', 3, '2. Obergeschoss'],
-  ['203', 2, '2. Obergeschoss'],
-  ['204', 1, '2. Obergeschoss'],
-  ['205', 2, '2. Obergeschoss'],
-  ['206', 3, '2. Obergeschoss'],
-  ['DL1', 2, 'DL'],
-  ['DL2', 3, 'DL'],
-  ['DL3', 2, 'DL'],
-  ['DL4', 2, 'DL'],
-  ['MAZ', 1, 'MAZ'],
+interface ZimmerVorlage {
+  bezeichnung: string
+  betten: number
+  haus: string
+  verfuegbar?: boolean
+  notiz?: string
+}
+
+const HAUPTHAUS_EG = 'Haupthaus, Erdgeschoss'
+const HAUPTHAUS_1 = 'Haupthaus, 1. Obergeschoss'
+const HAUPTHAUS_2 = 'Haupthaus, 2. Obergeschoss'
+const NACHBARHAUS = 'Drei Länder Hotel (Nachbarhaus)'
+
+const ZIMMERPLAN: ZimmerVorlage[] = [
+  { bezeichnung: '01', betten: 2, haus: HAUPTHAUS_EG },
+  { bezeichnung: '02', betten: 2, haus: HAUPTHAUS_EG },
+  { bezeichnung: '03', betten: 2, haus: HAUPTHAUS_EG },
+  { bezeichnung: '04', betten: 1, haus: HAUPTHAUS_EG },
+  { bezeichnung: '05', betten: 2, haus: HAUPTHAUS_EG },
+  { bezeichnung: '101', betten: 3, haus: HAUPTHAUS_1 },
+  { bezeichnung: '102', betten: 3, haus: HAUPTHAUS_1 },
+  { bezeichnung: '103', betten: 2, haus: HAUPTHAUS_1 },
+  { bezeichnung: '104', betten: 2, haus: HAUPTHAUS_1 },
+  { bezeichnung: '105', betten: 2, haus: HAUPTHAUS_1 },
+  { bezeichnung: '106', betten: 5, haus: HAUPTHAUS_1 },
+  { bezeichnung: '107', betten: 1, haus: HAUPTHAUS_1 },
+  { bezeichnung: '108', betten: 5, haus: HAUPTHAUS_1 },
+  { bezeichnung: '201', betten: 3, haus: HAUPTHAUS_2 },
+  { bezeichnung: '202', betten: 3, haus: HAUPTHAUS_2 },
+  { bezeichnung: '203', betten: 2, haus: HAUPTHAUS_2 },
+  { bezeichnung: '204', betten: 1, haus: HAUPTHAUS_2 },
+  { bezeichnung: '205', betten: 2, haus: HAUPTHAUS_2 },
+  { bezeichnung: '206', betten: 3, haus: HAUPTHAUS_2 },
+  { bezeichnung: 'DL1', betten: 2, haus: NACHBARHAUS },
+  { bezeichnung: 'DL2', betten: 3, haus: NACHBARHAUS },
+  { bezeichnung: 'DL3', betten: 2, haus: NACHBARHAUS },
+  { bezeichnung: 'DL4', betten: 2, haus: NACHBARHAUS },
+  {
+    bezeichnung: 'MAZ',
+    betten: 1,
+    haus: 'Mitarbeiterzimmer',
+    notiz:
+      'Steht nicht jedes Jahr zur Verfügung und ist einfach ausgestattet. Wenn der Vermieter es dieses Jahr nicht freigibt, hier auf „nicht verfügbar“ stellen.',
+  },
 ]
 
 function kategorie(betten: number): string {
@@ -46,13 +63,15 @@ function kategorie(betten: number): string {
 
 /** Legt den Zimmerplan der Unterkunft mit frischen IDs an. */
 export function erstelleZimmerplan(): Zimmer[] {
-  return ZIMMERPLAN.map(([bezeichnung, betten, bereich]) => ({
+  return ZIMMERPLAN.map((vorlage) => ({
     id: neueId(),
-    bezeichnung,
-    haus: bereich,
-    kategorie: kategorie(betten),
-    betten,
+    bezeichnung: vorlage.bezeichnung,
+    haus: vorlage.haus,
+    kategorie: kategorie(vorlage.betten),
+    betten: vorlage.betten,
+    verfuegbar: vorlage.verfuegbar ?? true,
     zuschlagProPerson: 0,
+    notiz: vorlage.notiz,
   }))
 }
 

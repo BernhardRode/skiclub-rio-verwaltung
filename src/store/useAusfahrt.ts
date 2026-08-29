@@ -66,6 +66,11 @@ interface AusfahrtStore {
   zuruecksetzen: () => void
 }
 
+/** Füllt Zimmerfelder auf, die in älteren Ständen fehlen können. */
+function normalisiereZimmer(liste: Zimmer[]): Zimmer[] {
+  return liste.map((zimmer) => ({ ...zimmer, verfuegbar: zimmer.verfuegbar ?? true }))
+}
+
 /** Füllt Felder auf, die in älteren Ständen oder Importen fehlen können. */
 function normalisiereTeilnehmer(liste: Teilnehmer[]): Teilnehmer[] {
   return liste.map((teilnehmer) => ({
@@ -150,6 +155,7 @@ export const useAusfahrt = create<AusfahrtStore>()(
                 bezeichnung,
                 kategorie: betten === 1 ? 'Einzelzimmer' : `${betten}-Bett-Zimmer`,
                 betten,
+                verfuegbar: true,
                 zuschlagProPerson: 0,
               }
               zimmer.push(neu)
@@ -383,6 +389,7 @@ export const useAusfahrt = create<AusfahrtStore>()(
           daten: {
             ...zusammengefuehrt,
             teilnehmer: normalisiereTeilnehmer(zusammengefuehrt.teilnehmer),
+            zimmer: normalisiereZimmer(zusammengefuehrt.zimmer),
           },
         }
       },
@@ -421,6 +428,7 @@ export function pruefeImport(roh: unknown): AusfahrtDaten {
     ...start,
     ...kandidat,
     teilnehmer: normalisiereTeilnehmer(kandidat.teilnehmer as Teilnehmer[]),
+    zimmer: normalisiereZimmer(kandidat.zimmer as Zimmer[]),
     version: DATEN_VERSION,
     ausfahrt: { ...start.ausfahrt, ...kandidat.ausfahrt },
     preise: {

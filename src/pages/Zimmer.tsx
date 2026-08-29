@@ -11,7 +11,11 @@ import {
   Seitenkopf,
   Textfeld,
 } from '../components/ui'
-import { berechneZimmerbelegung, ohneZimmer } from '../domain/kalkulation'
+import {
+  berechneZimmerbelegung,
+  ohneZimmer,
+  verfuegbareBetten,
+} from '../domain/kalkulation'
 import { ALTERSGRUPPE_LABEL, type Zimmer as ZimmerTyp } from '../domain/types'
 import { alsCsv, dateiHerunterladen } from '../lib/csv'
 import { euro, plural } from '../lib/format'
@@ -24,6 +28,7 @@ const leeresZimmer = (): ZimmerEntwurf => ({
   haus: '',
   kategorie: 'Doppelzimmer',
   betten: 2,
+  verfuegbar: true,
   zuschlagProPerson: 0,
   notiz: '',
 })
@@ -43,7 +48,8 @@ export function Zimmer() {
 
   const belegungen = berechneZimmerbelegung(daten.zimmer, daten.teilnehmer)
   const nichtZugeordnet = ohneZimmer(daten.teilnehmer)
-  const bettenGesamt = daten.zimmer.reduce((summe, z) => summe + z.betten, 0)
+  const bettenGesamt = verfuegbareBetten(daten.zimmer)
+  const gesperrt = daten.zimmer.filter((z) => !z.verfuegbar)
   const bettenBelegt = belegungen.reduce((summe, b) => summe + b.belegt.length, 0)
 
   const oeffnen = (zimmer?: ZimmerTyp) => {
@@ -75,12 +81,13 @@ export function Zimmer() {
 
   const csvExport = () => {
     const inhalt = alsCsv(
-      ['Zimmer', 'Haus', 'Kategorie', 'Betten', 'Belegt', 'Bewohner', 'Essen'],
+      ['Zimmer', 'Haus', 'Kategorie', 'Betten', 'Verfügbar', 'Belegt', 'Bewohner', 'Essen'],
       belegungen.map((b) => [
         b.zimmer.bezeichnung,
         b.zimmer.haus ?? '',
         b.zimmer.kategorie,
         b.zimmer.betten,
+        b.zimmer.verfuegbar ? 'ja' : 'nein',
         b.belegt.length,
         b.belegt.map((t) => `${t.vorname} ${t.nachname}`).join(', '),
         b.belegt
@@ -96,11 +103,15 @@ export function Zimmer() {
     <>
       <Seitenkopf
         titel="Zimmerbelegung"
-        beschreibung={`${bettenBelegt} von ${bettenGesamt} Betten belegt · ${plural(
+        beschreibung={`${bettenBelegt} von ${bettenGesamt} verfügbaren Betten belegt · ${plural(
           nichtZugeordnet.length,
           'Person',
           'Personen',
-        )} ohne Zimmer.`}
+        )} ohne Zimmer.${
+          gesperrt.length > 0
+            ? ` ${gesperrt.length} Zimmer als nicht verfügbar gekennzeichnet.`
+            : ''
+        }`}
         aktion={
           <>
             <Knopf onClick={zimmerplanWiederherstellen}>Fehlende Zimmer ergänzen</Knopf>
@@ -141,11 +152,13 @@ export function Zimmer() {
                   }
                 >
                   <option value="">Zimmer wählen …</option>
-                  {belegungen.map((b) => (
-                    <option key={b.zimmer.id} value={b.zimmer.id}>
-                      {b.zimmer.bezeichnung} ({b.freieBetten} frei)
-                    </option>
-                  ))}
+                  {belegungen
+                    .filter((b) => b.zimmer.verfuegbar)
+                    .map((b) => (
+                      <option key={b.zimmer.id} value={b.zimmer.id}>
+                        {b.zimmer.bezeichnung} ({b.freieBetten} frei)
+                      </option>
+                    ))}
                 </Auswahl>
               </li>
             ))}
@@ -172,8 +185,12 @@ export function Zimmer() {
           {belegungen.map((belegung) => (
             <section
               key={belegung.zimmer.id}
-              className={`rounded-xl border bg-white p-4 shadow-sm ${
-                belegung.ueberbelegt ? 'border-red-300' : 'border-slate-200'
+              className={`rounded-xl border p-4 shadow-sm ${
+                belegung.ueberbelegt
+                  ? 'border-red-300 bg-white'
+                  : belegung.zimmer.verfuegbar
+                    ? 'border-slate-200 bg-white'
+                    : 'border-slate-200 bg-slate-50'
               }`}
             >
               <header className="flex items-start justify-between gap-2">
@@ -190,7 +207,9 @@ export function Zimmer() {
                       : ''}
                   </p>
                 </div>
-                {belegung.ueberbelegt ? (
+                {!belegung.zimmer.verfuegbar && !belegung.ueberbelegt ? (
+                  <Etikett>nicht verfügbar</Etikett>
+                ) : belegung.ueberbelegt ? (
                   <Etikett ton="rot">überbelegt</Etikett>
                 ) : belegung.freieBetten === 0 ? (
                   <Etikett ton="gruen">voll</Etikett>
@@ -226,7 +245,9 @@ export function Zimmer() {
                             </Knopf>
                           </>
                         ) : (
-                          <span className="text-slate-400">Bett frei</span>
+                          <span className="text-slate-400">
+                            {belegung.zimmer.verfuegbar ? 'Bett frei' : 'gesperrt'}
+                          </span>
                         )}
                       </li>
                     )
@@ -234,7 +255,7 @@ export function Zimmer() {
                 )}
               </ul>
 
-              {nichtZugeordnet.length > 0 ? (
+              {nichtZugeordnet.length > 0 && belegung.zimmer.verfuegbar ? (
                 <Auswahl
                   className="mt-3 py-1.5 text-xs kein-druck"
                   value=""
@@ -317,6 +338,20 @@ export function Zimmer() {
                 setEntwurf((alt) => ({ ...alt, betten: Number(e.target.value) || 1 }))
               }
             />
+          </Feld>
+          <Feld
+            label="Verfügbar in dieser Saison"
+            hinweis="Gesperrte Zimmer bleiben im Plan, zählen aber nicht zur Bettenzahl."
+          >
+            <Auswahl
+              value={entwurf.verfuegbar ? 'ja' : 'nein'}
+              onChange={(e) =>
+                setEntwurf((alt) => ({ ...alt, verfuegbar: e.target.value === 'ja' }))
+              }
+            >
+              <option value="ja">Verfügbar</option>
+              <option value="nein">Nicht verfügbar</option>
+            </Auswahl>
           </Feld>
           <Feld
             label="Zuschlag pro Person (€)"

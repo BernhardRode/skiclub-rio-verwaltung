@@ -164,6 +164,11 @@ export function summeSkipassEinkauf(
   }, 0)
 }
 
+/** Betten, die in dieser Saison tatsächlich zur Verfügung stehen. */
+export function verfuegbareBetten(zimmer: Zimmer[]): number {
+  return zimmer.reduce((summe, z) => summe + (z.verfuegbar ? z.betten : 0), 0)
+}
+
 export interface Zimmerbelegung {
   zimmer: Zimmer
   belegt: Teilnehmer[]
@@ -179,11 +184,14 @@ export function berechneZimmerbelegung(
     const belegt = teilnehmer.filter(
       (t) => t.zimmerId === z.id && t.status !== 'storniert',
     )
+    // Ein gesperrtes Zimmer hat keine freien Betten; wer noch drin liegt,
+    // gilt als überbelegt und fällt damit auf der Zimmerseite auf.
+    const kapazitaet = z.verfuegbar ? z.betten : 0
     return {
       zimmer: z,
       belegt,
-      freieBetten: z.betten - belegt.length,
-      ueberbelegt: belegt.length > z.betten,
+      freieBetten: kapazitaet - belegt.length,
+      ueberbelegt: belegt.length > kapazitaet,
     }
   })
 }

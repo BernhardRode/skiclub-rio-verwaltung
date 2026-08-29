@@ -66,6 +66,11 @@ export interface Zimmer {
   haus?: string
   kategorie: string
   betten: number
+  /**
+   * Steht das Zimmer in dieser Saison zur Verfügung? Nicht verfügbare Zimmer
+   * bleiben im Plan erhalten, zählen aber nicht zur Bettenzahl.
+   */
+  verfuegbar: boolean
   /** Aufschlag bzw. Abschlag pro Person für die gesamte Ausfahrt. */
   zuschlagProPerson: number
   notiz?: string

@@ -23,6 +23,22 @@ describe('Zimmerplan der Unterkunft', () => {
     expect(nach('106')).toMatchObject({ betten: 5, kategorie: '5-Bett-Zimmer' })
   })
 
+  it('ordnet die Zimmer den drei Bereichen der Unterkunft zu', () => {
+    const zimmer = erstelleZimmerplan()
+    const haus = (bezeichnung: string) =>
+      zimmer.find((z) => z.bezeichnung === bezeichnung)?.haus
+    expect(haus('106')).toBe('Haupthaus, 1. Obergeschoss')
+    expect(haus('DL2')).toBe('Drei Länder Hotel (Nachbarhaus)')
+    expect(haus('MAZ')).toBe('Mitarbeiterzimmer')
+  })
+
+  it('liefert alle Zimmer zunächst als verfügbar, das MAZ mit Hinweis', () => {
+    const zimmer = erstelleZimmerplan()
+    expect(zimmer.every((z) => z.verfuegbar)).toBe(true)
+    const maz = zimmer.find((z) => z.bezeichnung === 'MAZ')
+    expect(maz?.notiz).toMatch(/nicht jedes Jahr/)
+  })
+
   it('startet ohne Zuschlag – Aufschläge werden pro Zimmer gepflegt', () => {
     expect(erstelleZimmerplan().every((z) => z.zuschlagProPerson === 0)).toBe(true)
   })

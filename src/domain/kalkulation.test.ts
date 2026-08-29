@@ -6,6 +6,7 @@ import {
   berechneVerpflegung,
   berechneZimmerbelegung,
   hochrechnenAusgabe,
+  verfuegbareBetten,
   naechte,
   ohneZimmer,
 } from './kalkulation'
@@ -31,6 +32,7 @@ const doppelzimmer: Zimmer = {
   bezeichnung: 'Zimmer 1',
   kategorie: 'Doppelzimmer',
   betten: 2,
+  verfuegbar: true,
   zuschlagProPerson: 0,
 }
 
@@ -39,6 +41,7 @@ const einzelzimmer: Zimmer = {
   bezeichnung: 'Zimmer 2',
   kategorie: 'Einzelzimmer',
   betten: 1,
+  verfuegbar: true,
   zuschlagProPerson: 90,
 }
 
@@ -365,6 +368,30 @@ describe('Zimmerbelegung', () => {
     )
     expect(belegung[0].belegt).toHaveLength(0)
     expect(belegung[0].freieBetten).toBe(2)
+  })
+
+  it('zählt nur Betten verfügbarer Zimmer', () => {
+    expect(verfuegbareBetten([doppelzimmer, einzelzimmer])).toBe(3)
+    expect(
+      verfuegbareBetten([doppelzimmer, { ...einzelzimmer, verfuegbar: false }]),
+    ).toBe(2)
+  })
+
+  it('bietet in einem gesperrten Zimmer keine freien Betten an', () => {
+    const [belegung] = berechneZimmerbelegung(
+      [{ ...doppelzimmer, verfuegbar: false }],
+      [],
+    )
+    expect(belegung.freieBetten).toBe(0)
+    expect(belegung.ueberbelegt).toBe(false)
+  })
+
+  it('meldet eine Belegung in einem gesperrten Zimmer als überbelegt', () => {
+    const [belegung] = berechneZimmerbelegung(
+      [{ ...doppelzimmer, verfuegbar: false }],
+      [teilnehmer({ id: 'tn-1', zimmerId: 'zi-1' })],
+    )
+    expect(belegung.ueberbelegt).toBe(true)
   })
 
   it('listet Personen ohne Zimmer ohne Stornierungen', () => {
