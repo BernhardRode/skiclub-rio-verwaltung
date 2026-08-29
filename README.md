@@ -1,0 +1,1 @@
+# skiclub-rio-verwaltung
